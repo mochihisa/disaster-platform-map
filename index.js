@@ -1,7 +1,37 @@
 //ここの読み込みをgeojsonなどでループ回したい
+
+//とりあえず国土地理院のCSVそのままで
+let csv = new XMLHttpRequest();
+csv.open("GET", "shelter-ishikawa.csv", false);
+try {
+    csv.send(null);
+} catch (err) {
+    console.log(err);
+}
+
+let shelterArray = [];
+
+let lines = csv.responseText.split(/\r\n|\n/);
+
+for (let i = 0; i < lines.length; ++i) {
+    let cells = lines[i].split(",");
+    if (cells.length != 1) {
+        shelterArray.push(cells);
+    }
+}
+
+
 shelterMarkers = L.featureGroup();
-shelterMarkers.addLayer(L.marker([36.56116, 136.6575]).bindPopup("<a href=\"\">避難所1</a>"));
-shelterMarkers.addLayer(L.marker([36.56316, 136.5475]).bindPopup("<a href=\"\">避難所2</a>"));
+
+shelterArray.forEach(function(shelter){
+    console.log(shelter);
+    shelterMarkers.addLayer(L.marker([shelter.slice(-3)[0], shelter.slice(-2)[0]])
+    .bindPopup(`<a href=\"\">${shelter[3]}</a>`)
+    .on('click', function (e) {
+        map.setView([shelter.slice(-3)[0], shelter.slice(-2)[0]], 19);
+    }));
+});
+
 
 areaCircles = L.featureGroup();
 areaCircles.addLayer(L.circle([36.56106, 136.6565], {
@@ -27,11 +57,11 @@ map.addLayer(areaCircles);
 
 
 // zoom
-map.on('zoomend', function() {
-    if (map.getZoom() >=9){
+map.on('zoomend', function () {
+    if (map.getZoom() >= 9) {
         map.removeLayer(areaCircles);
         map.addLayer(shelterMarkers);
-    } else {   
+    } else {
         map.removeLayer(shelterMarkers);
         map.addLayer(areaCircles);
     }
